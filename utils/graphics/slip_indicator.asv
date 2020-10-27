@@ -1,0 +1,6 @@
+function slip_handle = slip_indicator(u, v, w, beta_max)
+
+beta = asind(v / sqrt(u^2 + v^2 + w^2));
+
+beta_inrange = abs(beta_max - beta)>0.5;
+beta = beta_inrange*beta + beta_max*sign(beta)*

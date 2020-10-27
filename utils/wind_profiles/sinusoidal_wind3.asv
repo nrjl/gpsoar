@@ -1,0 +1,5 @@
+function [W, Jw] = sinusoidal_wind3(pos, V, lambda)
+
+[Wx, Wy, dWx_dx, dWy_dx] = sinusoidal_wind(pos(1,:), V, lambda);
+
+W = [W

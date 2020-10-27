@@ -1,0 +1,42 @@
+function plot_vertical(x, varargin)
+%--------------------------------------------------------------------------
+%
+% FUNCTION:		plot_vertical
+%
+% PURPOSE:		Plot vertical lines between current axis limits 
+%					(mainly used for mode changes in plot_states)
+%
+% SYNTAX:		plot_vertical(x)	- Plots vertical lines at specified x			
+%				plot_vertical(x, ls)
+%				plot_vertical(x, ls, col)
+%
+% INPUTS:		x	- x positions of lines (will use all points specified)
+%				ls  - line style (standard styles, '-', '-.', etc.)
+%				col	- colour (standard colors 'b', 'g', etc or [1x3] RGB
+%
+% OUTPUTS:		(graphical - figures 2-8)
+%
+% AUTHOR:		Nicholas Lawrance
+%
+% CREATED:		November 2007
+%
+% MODIFIED:     November 2007
+%
+% See also:		test, control_test
+%--------------------------------------------------------------------------
+ax = axis;
+ls = '-';
+col = [255 170 0]./255;
+
+if nargin == 2
+	ls = varargin{1};
+elseif nargin == 3
+	ls = varargin{1};
+	col = varargin{2};
+end
+
+x = x(:);
+
+for i = 1:length(x);
+	plot([x(i), x(i)], [ax(3), ax(4)], ls, 'Color', col);
+end

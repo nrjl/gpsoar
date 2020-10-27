@@ -1,0 +1,3 @@
+function [W] = linear_wind3(pos, W0, Jw)
+% #
+W = W0 + Jw*pos;
