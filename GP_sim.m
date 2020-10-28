@@ -3,7 +3,7 @@
 
 % clearvars -except full_turb
 
-addpath ../utils/SBXC ../utils/wing_data ../utils/graphics ../utils/static_functions ../utils/wind_profiles
+addpath SBXC wing_data graphics static_functions wind_functions gp_tools
 
 %% SETUP SIMULATION
 global Cd0 S AR e m Nmax Nmin CL_max dphi_dt_max GR_approx V_stall phi_max gamma_max
@@ -14,7 +14,7 @@ global K_explore
 g = 9.81;
 
 GPt = true;
-retrain = true;
+retrain = false;
 
 % --- Aircraft parameters --- %
 Cd0		= 0.017;		% Parasitic drag coefficient
@@ -41,7 +41,7 @@ K_explore = 0.5;
 % --- Figure properties --- %
 fig_height = 480;
 fig_width = 640;
-movie_on = false;
+movie_on = true;
 
 % Target box
 x_limits = [0, 400];
@@ -567,10 +567,23 @@ save_hypers = save_hypers(1:hyper_count-1,:);
 %%
 if movie_on
 	M(numel(M)+1) = getframe(h_fig, [0, 0, fig_width, fig_height]);
-	movie2avi(M, 'movies\soaring_OVERWRITE.avi', 'fps', 10, ...
-		'Compression','none')
-	movie2avi(M2, 'movies\soaring_OVERWRITE_isosurf.avi', 'fps', 10, ...
-		'Compression','none')
+    
+    vw = VideoWriter('movies\soaring_OVERWRITE.avi', 'Uncompressed AVI');
+    vw.FrameRate = 10;
+    open(vw);
+    writeVideo(vw, M);
+    close(vw);
+    
+    vw = VideoWriter('movies\soaring_OVERWRITE_isosurf.avi', 'Uncompressed AVI');
+    vw.FrameRate = 10;
+    open(vw);
+    writeVideo(vw, M2);
+    close(vw);
+        
+	% movie2avi(M, 'movies\soaring_OVERWRITE.avi', 'fps', 10, ...
+	% 	'Compression','none')
+	% movie2avi(M2, 'movies\soaring_OVERWRITE_isosurf.avi', 'fps', 10, ...
+	% 	'Compression','none')
 end
 
 %%

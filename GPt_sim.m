@@ -2,10 +2,7 @@
 % path 
 clear variables
 
-% addpath 'C:\Documents and Settings\n.lawrance\My Documents\Nick\Wing Model\SBXC\'
-% addpath 'C:\Documents and Settings\n.lawrance\My Documents\Nick\Wing Model\wing_data\'
-% addpath 'C:\Documents and Settings\n.lawrance\My Documents\Nick\Wing Model\graphics\'
-addpath SBXC wing_data graphics static_functions wind_profiles
+addpath SBXC wing_data graphics static_functions wind_profiles gp_tools
 
 %% SETUP SIMULATION
 global Cd0 S AR e m Nmax Nmin CL_max dphi_dt_max GR_approx V_stall phi_max gamma_max

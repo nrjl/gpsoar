@@ -9,7 +9,7 @@ t_max = 400;
 
 W_steady = [1, 0, -0.5];
 
-W_actual = @(X, t) thermal_field((X - t*W_steady), thermal_props);
+W_actual = @(X, t) thermal_field((X - t*W_steady)', thermal_props);
 
 % Random point finder
 point_find = @(nn) ones(nn,1)*min_point + rand(nn, 3)*diag((max_point - min_point));
@@ -45,7 +45,7 @@ for ii = 1:n_dist
 		
 		y_r_prime = W_actual(r_prime, t_prime);
 		
-		sample_cov = (y_r.*y_r_prime);
+		sample_cov = (y_r.*y_r_prime)';
 		
 		sample_matrix_u(ii, jj, :) = sample_cov(:,1);
 		sample_matrix_v(ii, jj, :) = sample_cov(:,2);

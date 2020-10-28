@@ -1,5 +1,6 @@
 %% Setup for running GP over wind data
 % clear variables
+addpath gp_tools wind_functions
 
 x_full = -2:0.2:2;
 [x_full, y_full] = meshgrid(x_full, x_full);

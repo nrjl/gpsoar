@@ -1,6 +1,7 @@
 %% Setup for running GP over flight wind data
 clear variables
 close all
+addpath gp_tools wind_functions
 
 plot_on = 1;
 %% GENERATE OR RETRIEVE FULL SET OF TRAINING DATA

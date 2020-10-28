@@ -1,16 +1,18 @@
 %% Plot flight history field estimate
+addpath 'gp_tools'
+
 fig_width = 640; fig_height = 480;
 plot_proportion = 1;
 plot_plane = false;
 
 if plot_plane
-	addpath 'C:\Documents and Settings\n.lawrance\My Documents\Nick\Wing Model\SBXC\'
-	addpath 'C:\Documents and Settings\n.lawrance\My Documents\Nick\Wing Model\wing_data\'
-	addpath 'C:\Documents and Settings\n.lawrance\My Documents\Nick\Wing Model\graphics\'
+	addpath 'SBXC'
+	addpath 'wing_data'
+	addpath 'graphics'
 	initialise_SBXC
 end
 
-% Check type of saved filed
+% Check type of saved file
 if ~exist('GPt', 'var')
 	GPt = false;
 end
@@ -141,36 +143,36 @@ end
 %% Plot actual field history
 
 if GPt
-% Field estimate
-h_fig = figure(11); clf; opos = get(h_fig, 'Position');
-opos(1:2) = min(opos(1:2), [1920-fig_width, 1100-fig_height]);
-set(h_fig, 'Position', [opos(1:2), fig_width, fig_height]);
-set(gca, 'Zdir', 'reverse'); set(gca, 'Ydir', 'reverse'); axis equal;
-view(3); hold on;
-xlabel('X (m)'); ylabel('Y (m)'); zlabel('Z (m)');
-h_box = plot3(x_limits([1,2,2,1,1,1,2,2,1,1,1,1,2,2,2,2]), ...
-    y_limits([1,1,1,1,1,2,2,2,2,2,2,1,1,2,2,1]), ...
-    z_limits([1,1,2,2,1,1,1,2,2,1,2,2,2,2,1,1]), ...
-    'Color', [.8, .8, .8], 'LineStyle', '--');
+    % Field estimate
+    h_fig = figure(11); clf; opos = get(h_fig, 'Position');
+    opos(1:2) = min(opos(1:2), [1920-fig_width, 1100-fig_height]);
+    set(h_fig, 'Position', [opos(1:2), fig_width, fig_height]);
+    set(gca, 'Zdir', 'reverse'); set(gca, 'Ydir', 'reverse'); axis equal;
+    view(3); hold on;
+    xlabel('X (m)'); ylabel('Y (m)'); zlabel('Z (m)');
+    h_box = plot3(x_limits([1,2,2,1,1,1,2,2,1,1,1,1,2,2,2,2]), ...
+        y_limits([1,1,1,1,1,2,2,2,2,2,2,1,1,2,2,1]), ...
+        z_limits([1,1,2,2,1,1,1,2,2,1,2,2,2,2,1,1]), ...
+        'Color', [.8, .8, .8], 'LineStyle', '--');
 
-tt = 0:(lookahead*ntf):tf;
+    tt = 0:(lookahead*ntf):tf;
 
-for ii = 1:numel(tt)
-	W_true_grid = W_actual([x_grid(:), y_grid(:), z_grid(:)]', ...
-		tt(ii)*ones(1, numel(x_grid)));
-	scale = sqrt(max(sum(W_true_grid.^2, 1)))/max_wind*0.6;
-	h_W_true = coneplot(x_grid, y_grid, z_grid, ...
-		reshape(W_true_grid(1,:)', size(x_grid)), ...
-		reshape(W_true_grid(2,:)', size(x_grid)), ...
-		reshape(W_true_grid(3,:)', size(x_grid)), ...
-		x_grid, y_grid, z_grid, scale);
-	set(h_W_true, 'EdgeColor', 'none')
-% 	h_W_true = quiver3(x_grid, y_grid, z_grid, ...
-% 		reshape(W_true_grid(1,:)', size(x_grid)), ...
-% 		reshape(W_true_grid(2,:)', size(x_grid)), ...
-% 		reshape(W_true_grid(3,:)', size(x_grid)), scale);
+    for ii = 1:numel(tt)
+	    W_true_grid = W_actual([x_grid(:), y_grid(:), z_grid(:)]', ...
+		    tt(ii)*ones(1, numel(x_grid)));
+	    scale = sqrt(max(sum(W_true_grid.^2, 1)))/max_wind*0.6;
+	    h_W_true = coneplot(x_grid, y_grid, z_grid, ...
+		    reshape(W_true_grid(1,:)', size(x_grid)), ...
+		    reshape(W_true_grid(2,:)', size(x_grid)), ...
+		    reshape(W_true_grid(3,:)', size(x_grid)), ...
+		    x_grid, y_grid, z_grid, scale);
+	    set(h_W_true, 'EdgeColor', 'none')
+    % 	h_W_true = quiver3(x_grid, y_grid, z_grid, ...
+    % 		reshape(W_true_grid(1,:)', size(x_grid)), ...
+    % 		reshape(W_true_grid(2,:)', size(x_grid)), ...
+    % 		reshape(W_true_grid(3,:)', size(x_grid)), scale);
 	
-	M4(ii) = getframe(h_fig, [0, 0, fig_width, fig_height]);
-	delete(h_W_true);	
-end
+	    M4(ii) = getframe(h_fig, [0, 0, fig_width, fig_height]);
+	    delete(h_W_true);	
+    end
 end

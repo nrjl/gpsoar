@@ -1,6 +1,7 @@
 % Use GPs to predict wind, then use RRT-like planner to plan energy gain
 % path 
 clearvars -except full_turb
+addpath static_functions wind_functions
 
 %% SETUP SIMULATION
 global Cd0 S AR e m Nmax Nmin CL_max dphi_dt_max GR_approx V_stall phi_max gamma_max

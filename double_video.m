@@ -163,4 +163,8 @@ if exist('M_title',  'var')
 end
 
 %%
-movie2avi(M3, 'movies\soaring_DOUBLE.avi', 'fps', 7.5, 'Compression','none')
+vw = VideoWriter('movies\soaring_DOUBLE.avi', 'Uncompressed AVI');
+vw.FrameRate = 10;
+open(vw);
+writeVideo(vw, M3);
+close(vw);

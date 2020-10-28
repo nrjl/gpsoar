@@ -11,20 +11,20 @@ function [pos_full, att_full, V_full] = wind_sim3_control(start_pos, start_att, 
 %				
 %				[pos, att, V, edot] = wind_sim3(...)
 %
-% INPUTS:		start_pos	- [3×1] Initial position (x;y;z)
-%				start_att	- [3×1] Initial attitude (phi, gamma_a, psi_a)
-%				V0			- [1×1] Initial airspeed
-%				dt			- [1×1] Integration timestep
-%				ntf			- [1×1] Control number (number of bank angles
+% INPUTS:		start_pos	- [3ï¿½1] Initial position (x;y;z)
+%				start_att	- [3ï¿½1] Initial attitude (phi, gamma_a, psi_a)
+%				V0			- [1ï¿½1] Initial airspeed
+%				dt			- [1ï¿½1] Integration timestep
+%				ntf			- [1ï¿½1] Control number (number of bank angles
 %								and climb angles tested 
-%				lookahead	- [1×1] Simulation time
+%				lookahead	- [1ï¿½1] Simulation time
 %				W_handle	- Function handle to wind function of the form:
 %								[W, Jw] = W_handle(pos)
 %
-% OUTPUTS:		pos			- [3×ntf×ntf×nt] Matrix of position during sim
-%				att			- [3×ntf×ntf×nt] Matrix of attitude during sim
-%				V			- [ntf×ntf×nt]   Matrix of velocity during sim
-%				edot		- [ntf×ntf] Matrix of terminal energy rates
+% OUTPUTS:		pos			- [3ï¿½ntfï¿½ntfï¿½nt] Matrix of position during sim
+%				att			- [3ï¿½ntfï¿½ntfï¿½nt] Matrix of attitude during sim
+%				V			- [ntfï¿½ntfï¿½nt]   Matrix of velocity during sim
+%				edot		- [ntfï¿½ntf] Matrix of terminal energy rates
 %
 %				NOTE: First ntf dimension (rows) is roll, second dimension
 %						(columns) is pitch
@@ -46,7 +46,7 @@ nt = floor(lookahead/dt);
 n_segments = size(controls, 2);
 
 % ----- Check for turbulence ----- %
-% Turbulence must be in form of [u v w p q r], 6×n;
+% Turbulence must be in form of [u v w p q r], 6ï¿½n;
 if nargin == 8
 	turbulence = zeros(6, nt*n_segments);
 	t0 = 0;
@@ -116,9 +116,9 @@ for p = 1:n_segments
 				CL_a = CL_max;
 			elseif CL_a < -CL_max
 				CL_a = -CL_max;
-			elseif L/(m*g) > Nmax;
+			elseif L/(m*g) > Nmax
 				CL_a = Nmax*m*g/qS;
-			elseif L/(m*g) < Nmin;
+			elseif L/(m*g) < Nmin
 				CL_a = Nmin*m*g/qS;
 			end
 		else

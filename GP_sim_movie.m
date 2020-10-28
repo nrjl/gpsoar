@@ -1,3 +1,5 @@
+% Make a movie of GP_sim simple result
+addpath gp_tools
 
 % Get first inv(K) matrix
 X_train = X_train_full(1:50,:,1);

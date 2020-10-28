@@ -103,7 +103,7 @@ M3(1) = getframe(h_fig, [0, 0, fig_width, fig_height]);
 %% Time info
 actual_fps = 0.8; % Frequency of plotted frames
 
-n_frames = (tf-t0)*actual_fps +1;
+n_frames = min((tf-t0)*actual_fps, floor(size(pos_full, 2)*actual_fps*dt));
 tvec = t0:(1/actual_fps):tf;
 
 hyper_count2 = 1;
@@ -196,3 +196,8 @@ end
 
 %%
 % movie2avi(M3, 'movies\soaring_DOUBLE2.avi', 'fps', 15, 'Compression','none')
+vw = VideoWriter('movies\soaring_DOUBLE2.avi', 'Uncompressed AVI');
+vw.FrameRate = 15;
+open(vw);
+writeVideo(vw, M3);
+close(vw);
