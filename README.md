@@ -5,14 +5,11 @@ This matlab code was developed for simulating soaring flight and for wind estima
 **Disclaimer:** This code is old, was never well written, and isn't maintained. Depending on interest I could try to rearrange and update it, but for now it's provided as is. You're welcome to ask for help and I'll try my best to explain or possibly eventually clean it up.
 
 
-## Installation / prerequisites
-
-The `utils` folder contains a set of useful tools for graphics, aircraft data and other general wind tools (thermal models, wind profile functions). You can add this to the matlab search path using `addpath utils`.
-
 ## Getting started
 
-You should be able to run GP_sim.m to demonstrate the basic operation of the system as demonstrated in the ICRA11 paper (then plot_result, then double_video_thesis to make nice videos).
+You should be able to run `GP_sim.m` to demonstrate the basic operation of the system as demonstrated in the ICRA11 paper (then `plot_result`, then `double_video_thesis` to make nice videos like this)
 
+![soaring_thesis](https://user-images.githubusercontent.com/10678827/97481993-dae09d00-1955-11eb-9f4e-45316ad45a9e.gif)
 
 ## Background
 
