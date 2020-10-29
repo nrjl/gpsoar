@@ -23,7 +23,7 @@ The code in this repo formed the basis of the following papers in [JGCD](https:/
   pages={2499--2505},
   doi={10.1109/ICRA.2011.5979966}}
   
-@article{doi:10.2514/1.52236,
+@article{lawrance2011jgcd,
   author = {Lawrance, Nicholas R. J. and Sukkarieh, Salah},
   title = {Autonomous Exploration of a Wind Field with a Gliding Aircraft},
   journal = {Journal of Guidance, Control, and Dynamics},
