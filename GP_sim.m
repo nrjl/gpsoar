@@ -5,7 +5,7 @@
 
 addpath SBXC wing_data graphics static_functions wind_functions gp_tools
 
-%% SETUP SIMULATION
+%% SETUP SIMULATION %%
 global Cd0 S AR e m Nmax Nmin CL_max dphi_dt_max GR_approx V_stall phi_max gamma_max
 % initialise_SBXC 
 global g pitch_coeff
@@ -43,10 +43,27 @@ fig_height = 480;
 fig_width = 640;
 movie_on = true;
 
-% Target box
+% Target box - this defines the region that the aircraft will try to explore 
+% (basically gets zero exploration reward outside this region)
 x_limits = [0, 400];
 y_limits = [-100, 100];
 z_limits = [-250, -150];
+
+
+%% SETUP WIND %% 
+% The wind field is defined by a function that can be queried with a position
+% and will return the wind vector (in m/s).
+% In this code, this is usally handled by the multi_field3 function, that can 
+% take a number of different wind components and sum them together to build
+% a single function that can then be queried.
+% Components are added through their respective functions (thermal_field for
+% thermals, sinusoid_field3 for a sinusoidal wind etc.) Each one of these
+% functions also takes some parameters (such as the size and location of the
+% thermal, so that the final wind_field3 function looks something like:
+% W = wind_field3(X, wind_function1, params1, wind_function2, params2, ...)
+% Each wind_function component should have a signature wind_function(X, params)
+% so some must be redefined usually as simple anonymous functions to fit this
+% signature.
 
 % --- Wind field --- %
 % thermals = [1, 100, 4, 150, 50, -200; 
@@ -91,6 +108,9 @@ t1 = @(X, P) thermal_field(X, P);
 s1 = @(X, P) cos_profile3(X, P);		% dWx_dz = [1,3]
 w1 = @(X, P) sinusoidal_wind3(X, P(1), P(2));
 
+% This windspeed will be applied constantly, so it just moves the whole
+% windfield at this speed over time - this is very simply implemented by
+% shifting the input position (see first argument of multi_field3 below)
 windspeed = [0.6, -0.1, 0]';
 % windspeed = [0, 0, 0]';
 
@@ -119,8 +139,10 @@ wind_noise = 0.05;			% std of noise on wind observations
 
 max_wind = 3;
 
-%% SETUP GP PROPERTIES
 
+%% SETUP GP PROPERTIES %%
+
+% GPt is time-varying, set to false for spatial only
 if GPt == false		% Spatial only
 	loghyper0 = log([45, 0.5, 0.09]);
 % 	loghyper0 = log([38, 0.5, 0.5]);
@@ -144,11 +166,15 @@ save_hypers = zeros(100, size(loghyper0,2)+1);
 save_hypers(1,:) = [0, loghyper0];
 hyper_count = 2;
 
+
+%% INITIAL OBSERVATIONS %%
+% The GP is bootstrapped with some initial observations, simulating flight
+% before the exploration controller is turned on
+
 % Observation set
-max_obs = 150;
+max_obs = 150;      % Maximum number of observations
 freq_obs = 1;		% Observation frequency
 
-%% INITIAL FLIGHT (MANUAL OR AN A-PRIORI DATA SET)
 % Intial wind estimate from manual control
 p0 = linspace(0, -pi, 7);
 x0 = [linspace(400, 0, 20), 50*sin(p0(2:end))];
@@ -158,9 +184,9 @@ z0 = linspace(-220, -200, numel(x0));
 % x0 =[-10, 0]; y0 =[0, 0]; z0 = [-205 -200];
 
 X_init = [x0(:), y0(:), z0(:)];
-start_pos = X_init(end,:)';
-start_att = [0;0;0]*pi/180;
-V0 = 15;
+start_pos = X_init(end,:)';         % Set position to last pos of prior flight
+start_att = [0;0;0]*pi/180;         % Same for attitude
+V0 = 15;                            % Initial airspeed
 
 len0 = sqrt(sum((X_init(2:end,:)-X_init(1:end-1,:)).^2, 2) );
 t_init = [reverse(-cumsum(reverse(len0./V0))); 0];
@@ -168,7 +194,8 @@ t_init = [reverse(-cumsum(reverse(len0./V0))); 0];
 % energy_target = thermals(1,4:6)'+[0;0;-50]; %[400; 20; -150];
 % energy_target = [info_target(1:2); -210];
 
-%% SIMULATION VARIABLES
+
+%% SIMULATION VARIABLES %%
 t0 = t_init(end);	% Initial time
 tf = 500;			% Final time
 lookahead = 1;		% Lookahead horizon
@@ -183,7 +210,7 @@ n_xgrid = 8; n_ygrid = 8; n_zgrid = 5;
 current_t = t0;
 min_energy = ((m*g*(-z_limits(2)-50))+.5*m*10^2);
 
-%% Turbulence - only generate if not already
+% Turbulence - only generate if not already
 if ~exist('full_turb', 'var')
 	fprintf(1, '\nGenerating turbulence...\n');
 	[turb_uvw, turb_pqr] = ...
@@ -192,10 +219,12 @@ if ~exist('full_turb', 'var')
 	fprintf(1, 'Done.\n');
 end
 
+
 %% AUTOMATIC VARIABLES
 X0 = zeros(12,1); X0(7:12) = [start_att; start_pos];
 
 % --- Pitch rate offset cubic --- %
+% This is to modify the pitch rate samples to avoid stall and overspeed
 V_normal = 13; V_max = 40;
 matmat = [V_normal^3, V_normal^2, V_normal, 1, 0;
 		3*V_max^2, 2*V_max,     1   , 0, 0;
@@ -214,6 +243,7 @@ current_pos = start_pos;	current_att = start_att;	current_V = V0;
 old_pos = start_pos;		old_att = start_att;		old_V = V0;
 current_E = E0;
 
+% Initialise array allocations
 obs_counter = 1;
 t_full = t0:dt:tf-dt;
 att_full = zeros(3, (tf-t0)/dt);
@@ -228,7 +258,10 @@ for kk = 1:length(t_init)
 	W_init(kk,:) = W_actual(X_init(kk,:)', t_init(kk,:)')' + wind_noise*randn(size(X_init(kk,:)));
 end
 
-% Training sets are initially just the manual observations. The training
+
+%% SETUP GP %%
+
+% GP training sets are initially just the manual observations. The training
 % sets are updated as new data is recorded.
 X_train = X_init;
 W_train = W_init;
@@ -265,7 +298,7 @@ else
 		[x_grid(:), y_grid(:), z_grid(:)], cov_funs{1}, loghyper, Ki);
 end
 
-
+% Wind values on a grid for plotting
 U_grid = reshape(WW_grid(:,1), size(x_grid));
 V_grid = reshape(WW_grid(:,2), size(x_grid));
 W_grid = reshape(WW_grid(:,3), size(x_grid));
@@ -285,7 +318,8 @@ h_W_true = coneplot(x_grid, y_grid, z_grid, ...
 view(3);
 set(h_W_true, 'EdgeColor', 'none');
 
-%% FIGURE SETUP
+
+%% FIGURE SETUP %%
 h_fig2 = figure(2); clf; opos = get(h_fig2, 'Position');
 opos(1:2) = min(opos(1:2), [1920-fig_width, 1100-fig_height]);
 set(h_fig2, 'Position', [opos(1:2), fig_width, fig_height]);
@@ -323,11 +357,13 @@ h_thermals = plot3(thermals(:,4), thermals(:,5), thermals(:,6), 'o', ...
 set(h_windcone, 'EdgeColor', 'none')
 set(gca, 'XLim', [-100, 500], 'YLim', [-200, 200], 'ZLim', [-300, -125]);
 
-%%
+
+
+%% MAIN SIMULATION LOOP %%
 
 for ii = 1:n_replan
 	
-	if ~mod(ii, 5) && retrain && (ii>10)
+	if ~mod(ii, 5) && retrain && (ii>10) % If repotimising hyperparameters
 		opt = optimset('Display', 'iter', 'GradObj', 'on', 'TolX', 1e-7,...
 			'MaxIter', 100);
 		if GPt
@@ -348,6 +384,7 @@ for ii = 1:n_replan
 		K_explore = 0.2/sqrt(exp(loghyper(end-1)));
 	end
 	
+    % Make GP wind prediction
 	if GPt
 		Ki = GPt_predict(X_train, t_train, W_train, [], [], ...
 			cov_funs{1}, loghyper);
@@ -438,6 +475,7 @@ for ii = 1:n_replan
 % 			full_controls = [2 2 2 2 2; 2 2 2 2 2];
 % 		end
 	else
+        % Build virtual function for wind estimation (and gradients J) based on GP predictor
 		W_estimate = @(X_test, t_t) GP_predict(X_train, W_train, X_test, cov_funs{1}, loghyper, Ki);
 		J_estimate = @(X_test, t_t) dGP_predict(X_train, W_train, X_test, [1,2,3], cov_funs{3}, loghyper, Ki);
 		
@@ -556,7 +594,7 @@ for ii = 1:n_replan
 	end
 end
 
-%%
+% Trim end points
 pos_full = pos_full(:,1:ii*replan_points);
 att_full = att_full(:,1:ii*replan_points);
 V_full	 = V_full(1:ii*replan_points);
@@ -564,7 +602,7 @@ t_full	 = t_full(1:ii*replan_points);
 
 save_hypers = save_hypers(1:hyper_count-1,:);
 
-%%
+%% Make movies
 if movie_on
 	M(numel(M)+1) = getframe(h_fig, [0, 0, fig_width, fig_height]);
     
@@ -586,7 +624,7 @@ if movie_on
 	% 	'Compression','none')
 end
 
-%%
+%% Final plots
 figure(3); clf; hold on;
 Ek = 0.5*m*V_full.^2;
 Eks = Ek - Ek(1);
