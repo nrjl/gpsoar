@@ -15,16 +15,20 @@ function [pos_full, att_full, V_full] = wind_sim3_control(start_pos, start_att, 
 %				start_att	- [3�1] Initial attitude (phi, gamma_a, psi_a)
 %				V0			- [1�1] Initial airspeed
 %				dt			- [1�1] Integration timestep
-%				ntf			- [1�1] Control number (number of bank angles
-%								and climb angles tested 
+%               controls    - [2xn] Control inputs (first row bank, second
+%                               row pitch, n is the number of actions
 %				lookahead	- [1�1] Simulation time
 %				W_handle	- Function handle to wind function of the form:
 %								[W, Jw] = W_handle(pos)
+%				ntf			- [1�1] Control number (number of bank angles
+%								and climb angles tested
+%               turbulence  - (optional) [6xn] Turbulence in form of 
+%                               [u v w p q r]
+%               t0          - (optional) [1x1] initial time                               
 %
 % OUTPUTS:		pos			- [3�ntf�ntf�nt] Matrix of position during sim
 %				att			- [3�ntf�ntf�nt] Matrix of attitude during sim
 %				V			- [ntf�ntf�nt]   Matrix of velocity during sim
-%				edot		- [ntf�ntf] Matrix of terminal energy rates
 %
 %				NOTE: First ntf dimension (rows) is roll, second dimension
 %						(columns) is pitch
@@ -73,9 +77,24 @@ for p = 1:n_segments
 	att = zeros(3, nt);
 	att(:,1) = current_att;
 	
+    % i,j are the controls indexes for roll and pitch respectively specified in the input.
 	i = controls(1,p);
 	j = controls(2,p);
-	
+
+	% First we construct a linearly spaced vector of length ntf, between -1 and 1
+	% For example, if ntf = 5, we would have [-1, -0.5, 0, 0.5, 1]
+	% Then, we offset this by the (normalised) current attitude (e.g bank/max_bank),
+    % then scale over time to give tfrac_xxx. 
+    % E.g, currently banked at 20deg, max bank 40deg, and lookahead=1 then 
+    % tfrac_bank would be [-0.75, -0.5 , -0.25,  0.  ,  0.25], basically meaning that
+    % the bank options are skewed away from the current bank (so you always have ntp
+    % options, but you can't go further than the max)
+
+    % The kstop_xxx variables are basically how long (in number of dt timesteps)
+    % you would perform the maximum input rate, e.g how many time steps you roll for
+    % So in our previous example, if we choose action 1, bank -0.75, then we will
+    % input the negative maximum roll rate for 75% of the time of the whole action.
+
 % 	tfrac_pitch = (linspace(-1,1,ntf)-polyval(pitch_coeff, current_V))*0.5/lookahead;
 	tfrac_pitch = (linspace(-1,1,ntf)-current_att(2)/(gamma_max))*0.5/lookahead;
 	kstop_pitch = fix(abs(tfrac_pitch)*(nt-1));
