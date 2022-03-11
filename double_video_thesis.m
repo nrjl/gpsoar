@@ -1,5 +1,5 @@
 %% Plot double video (above below)
-% plot_result;
+plot_result;
 fig_width = 640; fig_height = 640;
 plot_proportion = 1;
 
